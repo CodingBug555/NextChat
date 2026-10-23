@@ -25,6 +25,8 @@ import { XAIApi } from "./platforms/xai";
 import { ChatGLMApi } from "./platforms/glm";
 import { SiliconflowApi } from "./platforms/siliconflow";
 import { Ai302Api } from "./platforms/ai302";
+import { OpenRouterApi } from "./platforms/openrouter";
+import { NvidiaApi } from "./platforms/nvidia";
 
 export const ROLES = ["system", "user", "assistant"] as const;
 export type MessageRole = (typeof ROLES)[number];
@@ -177,6 +179,12 @@ export class ClientApi {
       case ModelProvider["302.AI"]:
         this.llm = new Ai302Api();
         break;
+      case ModelProvider.OpenRouter:
+        this.llm = new OpenRouterApi();
+        break;
+      case ModelProvider.NVIDIA:
+        this.llm = new NvidiaApi();
+        break;
       default:
         this.llm = new ChatGPTApi();
     }
@@ -241,9 +249,52 @@ export function validString(x: string): boolean {
   return x?.length > 0;
 }
 
-export function getHeaders(ignoreHeaders: boolean = false) {
+function resolveApiKeyForProvider(
+  providerName: ServiceProvider,
+  accessStore: ReturnType<typeof useAccessStore.getState>,
+): string {
+  switch (providerName) {
+    case ServiceProvider.Google:
+      return accessStore.googleApiKey;
+    case ServiceProvider.Azure:
+      return accessStore.azureApiKey;
+    case ServiceProvider.Anthropic:
+      return accessStore.anthropicApiKey;
+    case ServiceProvider.ByteDance:
+      return accessStore.bytedanceApiKey;
+    case ServiceProvider.Alibaba:
+      return accessStore.alibabaApiKey;
+    case ServiceProvider.Moonshot:
+      return accessStore.moonshotApiKey;
+    case ServiceProvider.XAI:
+      return accessStore.xaiApiKey;
+    case ServiceProvider.DeepSeek:
+      return accessStore.deepseekApiKey;
+    case ServiceProvider.ChatGLM:
+      return accessStore.chatglmApiKey;
+    case ServiceProvider.SiliconFlow:
+      return accessStore.siliconflowApiKey;
+    case ServiceProvider.Iflytek:
+      return accessStore.iflytekApiKey && accessStore.iflytekApiSecret
+        ? accessStore.iflytekApiKey + ":" + accessStore.iflytekApiSecret
+        : "";
+    case ServiceProvider["302.AI"]:
+      return accessStore.ai302ApiKey;
+    case ServiceProvider.OpenRouter:
+      return accessStore.openrouterApiKey;
+    case ServiceProvider.NVIDIA:
+      return accessStore.nvidiaApiKey;
+    default:
+      return accessStore.openaiApiKey;
+  }
+}
+
+export function getHeadersForProvider(
+  providerName: ServiceProvider,
+  apiKeyOverride?: string,
+  ignoreHeaders: boolean = false,
+) {
   const accessStore = useAccessStore.getState();
-  const chatStore = useChatStore.getState();
   let headers: Record<string, string> = {};
   if (!ignoreHeaders) {
     headers = {
@@ -254,100 +305,27 @@ export function getHeaders(ignoreHeaders: boolean = false) {
 
   const clientConfig = getClientConfig();
 
-  function getConfig() {
-    const modelConfig = chatStore.currentSession().mask.modelConfig;
-    const isGoogle = modelConfig.providerName === ServiceProvider.Google;
-    const isAzure = modelConfig.providerName === ServiceProvider.Azure;
-    const isAnthropic = modelConfig.providerName === ServiceProvider.Anthropic;
-    const isBaidu = modelConfig.providerName == ServiceProvider.Baidu;
-    const isByteDance = modelConfig.providerName === ServiceProvider.ByteDance;
-    const isAlibaba = modelConfig.providerName === ServiceProvider.Alibaba;
-    const isMoonshot = modelConfig.providerName === ServiceProvider.Moonshot;
-    const isIflytek = modelConfig.providerName === ServiceProvider.Iflytek;
-    const isDeepSeek = modelConfig.providerName === ServiceProvider.DeepSeek;
-    const isXAI = modelConfig.providerName === ServiceProvider.XAI;
-    const isChatGLM = modelConfig.providerName === ServiceProvider.ChatGLM;
-    const isSiliconFlow =
-      modelConfig.providerName === ServiceProvider.SiliconFlow;
-    const isAI302 = modelConfig.providerName === ServiceProvider["302.AI"];
-    const isEnabledAccessControl = accessStore.enabledAccessControl();
-    const apiKey = isGoogle
-      ? accessStore.googleApiKey
-      : isAzure
-      ? accessStore.azureApiKey
-      : isAnthropic
-      ? accessStore.anthropicApiKey
-      : isByteDance
-      ? accessStore.bytedanceApiKey
-      : isAlibaba
-      ? accessStore.alibabaApiKey
-      : isMoonshot
-      ? accessStore.moonshotApiKey
-      : isXAI
-      ? accessStore.xaiApiKey
-      : isDeepSeek
-      ? accessStore.deepseekApiKey
-      : isChatGLM
-      ? accessStore.chatglmApiKey
-      : isSiliconFlow
-      ? accessStore.siliconflowApiKey
-      : isIflytek
-      ? accessStore.iflytekApiKey && accessStore.iflytekApiSecret
-        ? accessStore.iflytekApiKey + ":" + accessStore.iflytekApiSecret
-        : ""
-      : isAI302
-      ? accessStore.ai302ApiKey
-      : accessStore.openaiApiKey;
-    return {
-      isGoogle,
-      isAzure,
-      isAnthropic,
-      isBaidu,
-      isByteDance,
-      isAlibaba,
-      isMoonshot,
-      isIflytek,
-      isDeepSeek,
-      isXAI,
-      isChatGLM,
-      isSiliconFlow,
-      isAI302,
-      apiKey,
-      isEnabledAccessControl,
-    };
-  }
+  const isGoogle = providerName === ServiceProvider.Google;
+  const isAzure = providerName === ServiceProvider.Azure;
+  const isAnthropic = providerName === ServiceProvider.Anthropic;
+  const isBaidu = providerName === ServiceProvider.Baidu;
+  const isEnabledAccessControl = accessStore.enabledAccessControl();
 
-  function getAuthHeader(): string {
-    return isAzure
-      ? "api-key"
-      : isAnthropic
-      ? "x-api-key"
-      : isGoogle
-      ? "x-goog-api-key"
-      : "Authorization";
-  }
+  const apiKey =
+    apiKeyOverride !== undefined
+      ? apiKeyOverride
+      : resolveApiKeyForProvider(providerName, accessStore);
 
-  const {
-    isGoogle,
-    isAzure,
-    isAnthropic,
-    isBaidu,
-    isByteDance,
-    isAlibaba,
-    isMoonshot,
-    isIflytek,
-    isDeepSeek,
-    isXAI,
-    isChatGLM,
-    isSiliconFlow,
-    isAI302,
-    apiKey,
-    isEnabledAccessControl,
-  } = getConfig();
   // when using baidu api in app, not set auth header
   if (isBaidu && clientConfig?.isApp) return headers;
 
-  const authHeader = getAuthHeader();
+  const authHeader = isAzure
+    ? "api-key"
+    : isAnthropic
+    ? "x-api-key"
+    : isGoogle
+    ? "x-goog-api-key"
+    : "Authorization";
 
   const bearerToken = getBearerToken(
     apiKey,
@@ -363,6 +341,16 @@ export function getHeaders(ignoreHeaders: boolean = false) {
   }
 
   return headers;
+}
+
+export function getHeaders(ignoreHeaders: boolean = false) {
+  const chatStore = useChatStore.getState();
+  const providerName = chatStore.currentSession().mask.modelConfig.providerName;
+  return getHeadersForProvider(
+    providerName as ServiceProvider,
+    undefined,
+    ignoreHeaders,
+  );
 }
 
 export function getClientApi(provider: ServiceProvider): ClientApi {
@@ -393,6 +381,10 @@ export function getClientApi(provider: ServiceProvider): ClientApi {
       return new ClientApi(ModelProvider.SiliconFlow);
     case ServiceProvider["302.AI"]:
       return new ClientApi(ModelProvider["302.AI"]);
+    case ServiceProvider.OpenRouter:
+      return new ClientApi(ModelProvider.OpenRouter);
+    case ServiceProvider.NVIDIA:
+      return new ClientApi(ModelProvider.NVIDIA);
     default:
       return new ClientApi(ModelProvider.GPT);
   }

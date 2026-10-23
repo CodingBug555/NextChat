@@ -467,6 +467,42 @@ const da: PartialLocaleType = {
           SubTitle: "F.eks.: ",
         },
       },
+      OpenRouter: {
+        ApiKey: {
+          Title: "OpenRouter-nøgle",
+          SubTitle: "Din egen OpenRouter-nøgle",
+          Placeholder: "OpenRouter API Key",
+        },
+        Endpoint: {
+          Title: "Adresse",
+          SubTitle: "F.eks.: ",
+        },
+        FetchModels: {
+          Title: "Modelliste",
+          SubTitle: "Hent modellisten fra OpenRouter",
+          Button: "Hent modeller",
+          Success: (count: number) => `Indlæste ${count} modeller`,
+          Fail: "Kunne ikke hente modeller, tjek din nøgle og adresse",
+        },
+      },
+      NVIDIA: {
+        ApiKey: {
+          Title: "NVIDIA NIM-nøgle",
+          SubTitle: "Din egen NVIDIA NIM-nøgle",
+          Placeholder: "nvapi-xxx",
+        },
+        Endpoint: {
+          Title: "Adresse",
+          SubTitle: "F.eks.: ",
+        },
+        FetchModels: {
+          Title: "Modelliste",
+          SubTitle: "Hent modellisten fra NVIDIA NIM",
+          Button: "Hent modeller",
+          Success: (count: number) => `Indlæste ${count} modeller`,
+          Fail: "Kunne ikke hente modeller, tjek din nøgle og adresse",
+        },
+      },
       Stability: {
         ApiKey: {
           Title: "Stability-nøgle",
@@ -573,6 +609,40 @@ const da: PartialLocaleType = {
         SubTitle: "Hvor hurtigt der oplæses",
       },
       Engine: "TTS-motor",
+    },
+    Council: {
+      Title: "AI + AI-råd",
+      Enable: {
+        Title: "Aktivér råds-tilstand",
+        SubTitle:
+          "To eller flere AI'er svarer, vurderer hinanden og samler ét endeligt svar",
+      },
+      Participant: {
+        Title: (index: number) => `Panelmedlem ${index}`,
+        SubTitle: "Udbyder, model og valgfri dedikeret nøgle",
+        Provider: "Udbyder",
+        Model: "Model",
+        ApiKey: "API-nøgle",
+        ApiKeyPlaceholder: "Tom = brug udbyderens fælles nøgle",
+        SetSynthesizer: "Formand",
+        Remove: "Fjern",
+      },
+      AddParticipant: {
+        Title: "Tilføj panelmedlem",
+        SubTitle: "Føj endnu en AI til panelet",
+        Button: "Tilføj AI",
+      },
+      Rounds: {
+        Title: "Refleksionsrunder",
+        SubTitle: "Hvor mange gange AI'erne kritiserer og forbedrer hinanden",
+      },
+      MergeMode: {
+        Title: "Endelig samling",
+        SubTitle: "Hvordan panelets svar bliver til ét",
+        Synthesize: "Formanden samler (anbefalet)",
+        Longest: "Vælg det længste svar",
+        Vote: "Vælg det mest enige svar",
+      },
     },
     Realtime: {
       Enable: {

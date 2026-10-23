@@ -36,6 +36,22 @@ export enum Theme {
   Light = "light",
 }
 
+export interface CouncilParticipant {
+  id: string;
+  providerName: ServiceProvider;
+  model: string;
+  // when empty, the provider's shared/global key is used
+  apiKey?: string;
+}
+
+export interface CouncilConfig {
+  enable: boolean;
+  participants: CouncilParticipant[];
+  rounds: number;
+  synthesizerIndex: number;
+  mergeMode: "synthesize" | "longest" | "vote";
+}
+
 const config = getClientConfig();
 
 export const DEFAULT_CONFIG = {
@@ -104,6 +120,14 @@ export const DEFAULT_CONFIG = {
     temperature: 0.9,
     voice: "alloy" as Voice,
   },
+
+  councilConfig: {
+    enable: false,
+    participants: [] as CouncilParticipant[],
+    rounds: 1,
+    synthesizerIndex: 0,
+    mergeMode: "synthesize" as CouncilConfig["mergeMode"],
+  },
 };
 
 export type ChatConfig = typeof DEFAULT_CONFIG;
@@ -111,6 +135,7 @@ export type ChatConfig = typeof DEFAULT_CONFIG;
 export type ModelConfig = ChatConfig["modelConfig"];
 export type TTSConfig = ChatConfig["ttsConfig"];
 export type RealtimeConfig = ChatConfig["realtimeConfig"];
+export type CouncilConfigType = ChatConfig["councilConfig"];
 
 export function limitNumber(
   x: number,
@@ -191,6 +216,32 @@ export const useAppConfig = createPersistStore(
       }));
     },
 
+    mergeProviderModels(providerId: string, newModels: LLMModel[]) {
+      if (!newModels || newModels.length === 0) {
+        return;
+      }
+
+      const modelMap: Record<string, LLMModel> = {};
+
+      for (const model of get().models) {
+        // drop the provider's previous entries so a refresh replaces them
+        if (model.provider?.id !== providerId) {
+          modelMap[`${model.name}@${model?.provider?.id}`] = model;
+        }
+      }
+
+      for (const model of newModels) {
+        modelMap[`${model.name}@${model?.provider?.id}`] = {
+          ...model,
+          available: true,
+        };
+      }
+
+      set(() => ({
+        models: Object.values(modelMap),
+      }));
+    },
+
     allModels() {},
   }),
   {
@@ -208,7 +259,17 @@ export const useAppConfig = createPersistStore(
         if (idx !== -1) models[idx] = pModel;
         else models.push(pModel);
       });
-      return { ...currentState, ...state, models: models };
+      // Council config was added after these states were persisted.
+      const councilConfig = {
+        ...DEFAULT_CONFIG.councilConfig,
+        ...(state.councilConfig ?? {}),
+      };
+      return {
+        ...currentState,
+        ...state,
+        councilConfig,
+        models: models,
+      };
     },
 
     migrate(persistedState, version) {

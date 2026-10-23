@@ -490,6 +490,42 @@ const en: LocaleType = {
           SubTitle: "Example: ",
         },
       },
+      OpenRouter: {
+        ApiKey: {
+          Title: "OpenRouter API Key",
+          SubTitle: "Use a custom OpenRouter API Key",
+          Placeholder: "OpenRouter API Key",
+        },
+        Endpoint: {
+          Title: "Endpoint Address",
+          SubTitle: "Example: ",
+        },
+        FetchModels: {
+          Title: "Model List",
+          SubTitle: "Fetch the model list from OpenRouter",
+          Button: "Fetch Models",
+          Success: (count: number) => `Loaded ${count} models`,
+          Fail: "Failed to fetch models, check your API key and endpoint",
+        },
+      },
+      NVIDIA: {
+        ApiKey: {
+          Title: "NVIDIA NIM API Key",
+          SubTitle: "Use a custom NVIDIA NIM API Key",
+          Placeholder: "nvapi-xxx",
+        },
+        Endpoint: {
+          Title: "Endpoint Address",
+          SubTitle: "Example: ",
+        },
+        FetchModels: {
+          Title: "Model List",
+          SubTitle: "Fetch the model list from NVIDIA NIM",
+          Button: "Fetch Models",
+          Success: (count: number) => `Loaded ${count} models`,
+          Fail: "Failed to fetch models, check your API key and endpoint",
+        },
+      },
       Stability: {
         ApiKey: {
           Title: "Stability API Key",
@@ -602,6 +638,40 @@ const en: LocaleType = {
         SubTitle: "The speed of the generated audio",
       },
       Engine: "TTS Engine",
+    },
+    Council: {
+      Title: "AI + AI Council",
+      Enable: {
+        Title: "Enable Council Mode",
+        SubTitle:
+          "Two or more AIs answer, reflect on each other, and merge into one final answer",
+      },
+      Participant: {
+        Title: (index: number) => `Panel member ${index}`,
+        SubTitle: "Provider, model and optional dedicated API key",
+        Provider: "Provider",
+        Model: "Model",
+        ApiKey: "API Key",
+        ApiKeyPlaceholder: "Leave empty to use the provider's shared key",
+        SetSynthesizer: "Chair",
+        Remove: "Remove",
+      },
+      AddParticipant: {
+        Title: "Add panel member",
+        SubTitle: "Add another AI to the panel",
+        Button: "Add AI",
+      },
+      Rounds: {
+        Title: "Reflection Rounds",
+        SubTitle: "How many times the AIs critique and refine each other",
+      },
+      MergeMode: {
+        Title: "Final Merge",
+        SubTitle: "How the panel's answers become one",
+        Synthesize: "Chair synthesizes (recommended)",
+        Longest: "Pick the longest answer",
+        Vote: "Pick the most agreed answer",
+      },
     },
     Realtime: {
       Enable: {

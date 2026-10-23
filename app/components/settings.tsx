@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 import styles from "./settings.module.scss";
 
@@ -76,6 +76,8 @@ import {
   DeepSeek,
   SiliconFlow,
   AI302,
+  OpenRouter,
+  NVIDIA,
 } from "../constant";
 import { Prompt, SearchService, usePromptStore } from "../store/prompt";
 import { ErrorBoundary } from "./error";
@@ -83,12 +85,14 @@ import { InputRange } from "./input-range";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarPicker } from "./emoji";
 import { getClientConfig } from "../config/client";
+import { getClientApi } from "../client/api";
 import { useSyncStore } from "../store/sync";
 import { nanoid } from "nanoid";
 import { useMaskStore } from "../store/mask";
 import { ProviderType } from "../utils/cloud";
 import { TTSConfigList } from "./tts-config";
 import { RealtimeConfigList } from "./realtime-chat/realtime-config";
+import { CouncilConfigList } from "./council-config";
 
 function EditPromptModal(props: { id: string; onClose: () => void }) {
   const promptStore = usePromptStore();
@@ -1361,6 +1365,185 @@ export function Settings() {
     </>
   );
 
+  const [fetchingOpenRouterModels, setFetchingOpenRouterModels] =
+    useState(false);
+  const autoFetchedOpenRouter = useRef(false);
+
+  async function fetchOpenRouterModels() {
+    setFetchingOpenRouterModels(true);
+    try {
+      const api = getClientApi(ServiceProvider.OpenRouter);
+      const models = await api.llm.models();
+      if (!models || models.length === 0) {
+        showToast(Locale.Settings.Access.OpenRouter.FetchModels.Fail);
+        return;
+      }
+      config.mergeProviderModels("openrouter", models);
+      showToast(
+        Locale.Settings.Access.OpenRouter.FetchModels.Success(models.length),
+      );
+    } catch (e) {
+      console.error("[OpenRouter] failed to fetch models", e);
+      showToast(Locale.Settings.Access.OpenRouter.FetchModels.Fail);
+    } finally {
+      setFetchingOpenRouterModels(false);
+    }
+  }
+
+  // auto-load the OpenRouter catalog the first time the provider is selected
+  useEffect(() => {
+    if (
+      accessStore.provider === ServiceProvider.OpenRouter &&
+      !autoFetchedOpenRouter.current
+    ) {
+      autoFetchedOpenRouter.current = true;
+      fetchOpenRouterModels();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessStore.provider]);
+
+  const [fetchingNvidiaModels, setFetchingNvidiaModels] = useState(false);
+  const autoFetchedNvidia = useRef(false);
+
+  async function fetchNvidiaModels() {
+    setFetchingNvidiaModels(true);
+    try {
+      const api = getClientApi(ServiceProvider.NVIDIA);
+      const models = await api.llm.models();
+      if (!models || models.length === 0) {
+        showToast(Locale.Settings.Access.NVIDIA.FetchModels.Fail);
+        return;
+      }
+      config.mergeProviderModels("nvidia", models);
+      showToast(
+        Locale.Settings.Access.NVIDIA.FetchModels.Success(models.length),
+      );
+    } catch (e) {
+      console.error("[NVIDIA] failed to fetch models", e);
+      showToast(Locale.Settings.Access.NVIDIA.FetchModels.Fail);
+    } finally {
+      setFetchingNvidiaModels(false);
+    }
+  }
+
+  // auto-load the NVIDIA catalog the first time the provider is selected
+  useEffect(() => {
+    if (
+      accessStore.provider === ServiceProvider.NVIDIA &&
+      !autoFetchedNvidia.current
+    ) {
+      autoFetchedNvidia.current = true;
+      fetchNvidiaModels();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessStore.provider]);
+
+  const nvidiaConfigComponent = accessStore.provider ===
+    ServiceProvider.NVIDIA && (
+    <>
+      <ListItem
+        title={Locale.Settings.Access.NVIDIA.Endpoint.Title}
+        subTitle={
+          Locale.Settings.Access.NVIDIA.Endpoint.SubTitle +
+          NVIDIA.ExampleEndpoint
+        }
+      >
+        <input
+          aria-label={Locale.Settings.Access.NVIDIA.Endpoint.Title}
+          type="text"
+          value={accessStore.nvidiaUrl}
+          placeholder={NVIDIA.ExampleEndpoint}
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.nvidiaUrl = e.currentTarget.value),
+            )
+          }
+        ></input>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.NVIDIA.ApiKey.Title}
+        subTitle={Locale.Settings.Access.NVIDIA.ApiKey.SubTitle}
+      >
+        <PasswordInput
+          aria-label={Locale.Settings.Access.NVIDIA.ApiKey.Title}
+          value={accessStore.nvidiaApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.NVIDIA.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.nvidiaApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.NVIDIA.FetchModels.Title}
+        subTitle={Locale.Settings.Access.NVIDIA.FetchModels.SubTitle}
+      >
+        <IconButton
+          aria={Locale.Settings.Access.NVIDIA.FetchModels.Button}
+          text={Locale.Settings.Access.NVIDIA.FetchModels.Button}
+          icon={fetchingNvidiaModels ? <LoadingIcon /> : <ResetIcon />}
+          disabled={fetchingNvidiaModels}
+          onClick={fetchNvidiaModels}
+        />
+      </ListItem>
+    </>
+  );
+
+  const openrouterConfigComponent =
+    accessStore.provider === ServiceProvider.OpenRouter && (
+      <>
+        <ListItem
+          title={Locale.Settings.Access.OpenRouter.Endpoint.Title}
+          subTitle={
+            Locale.Settings.Access.OpenRouter.Endpoint.SubTitle +
+            OpenRouter.ExampleEndpoint
+          }
+        >
+          <input
+            aria-label={Locale.Settings.Access.OpenRouter.Endpoint.Title}
+            type="text"
+            value={accessStore.openrouterUrl}
+            placeholder={OpenRouter.ExampleEndpoint}
+            onChange={(e) =>
+              accessStore.update(
+                (access) => (access.openrouterUrl = e.currentTarget.value),
+              )
+            }
+          ></input>
+        </ListItem>
+        <ListItem
+          title={Locale.Settings.Access.OpenRouter.ApiKey.Title}
+          subTitle={Locale.Settings.Access.OpenRouter.ApiKey.SubTitle}
+        >
+          <PasswordInput
+            aria-label={Locale.Settings.Access.OpenRouter.ApiKey.Title}
+            value={accessStore.openrouterApiKey}
+            type="text"
+            placeholder={Locale.Settings.Access.OpenRouter.ApiKey.Placeholder}
+            onChange={(e) => {
+              accessStore.update(
+                (access) => (access.openrouterApiKey = e.currentTarget.value),
+              );
+            }}
+          />
+        </ListItem>
+        <ListItem
+          title={Locale.Settings.Access.OpenRouter.FetchModels.Title}
+          subTitle={Locale.Settings.Access.OpenRouter.FetchModels.SubTitle}
+        >
+          <IconButton
+            aria={Locale.Settings.Access.OpenRouter.FetchModels.Button}
+            text={Locale.Settings.Access.OpenRouter.FetchModels.Button}
+            icon={fetchingOpenRouterModels ? <LoadingIcon /> : <ResetIcon />}
+            disabled={fetchingOpenRouterModels}
+            onClick={fetchOpenRouterModels}
+          />
+        </ListItem>
+      </>
+    );
+
   const stabilityConfigComponent = accessStore.provider ===
     ServiceProvider.Stability && (
     <>
@@ -1864,6 +2047,8 @@ export function Settings() {
                   {chatglmConfigComponent}
                   {siliconflowConfigComponent}
                   {ai302ConfigComponent}
+                  {openrouterConfigComponent}
+                  {nvidiaConfigComponent}
                 </>
               )}
             </>
@@ -1938,6 +2123,16 @@ export function Settings() {
               config.update(
                 (config) => (config.realtimeConfig = realtimeConfig),
               );
+            }}
+          />
+        </List>
+        <List>
+          <CouncilConfigList
+            councilConfig={config.councilConfig}
+            updateConfig={(updater) => {
+              const councilConfig = { ...config.councilConfig };
+              updater(councilConfig);
+              config.update((config) => (config.councilConfig = councilConfig));
             }}
           />
         </List>
