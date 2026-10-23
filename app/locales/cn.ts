@@ -505,6 +505,42 @@ const cn = {
           SubTitle: "样例：",
         },
       },
+      OpenRouter: {
+        ApiKey: {
+          Title: "接口密钥",
+          SubTitle: "使用自定义 OpenRouter API Key",
+          Placeholder: "OpenRouter API Key",
+        },
+        Endpoint: {
+          Title: "接口地址",
+          SubTitle: "样例：",
+        },
+        FetchModels: {
+          Title: "模型列表",
+          SubTitle: "从 OpenRouter 获取模型列表",
+          Button: "获取模型",
+          Success: (count: number) => `已加载 ${count} 个模型`,
+          Fail: "获取模型失败，请检查接口密钥和接口地址",
+        },
+      },
+      NVIDIA: {
+        ApiKey: {
+          Title: "接口密钥",
+          SubTitle: "使用自定义 NVIDIA NIM API Key",
+          Placeholder: "nvapi-xxx",
+        },
+        Endpoint: {
+          Title: "接口地址",
+          SubTitle: "样例：",
+        },
+        FetchModels: {
+          Title: "模型列表",
+          SubTitle: "从 NVIDIA NIM 获取模型列表",
+          Button: "获取模型",
+          Success: (count: number) => `已加载 ${count} 个模型`,
+          Fail: "获取模型失败，请检查接口密钥和接口地址",
+        },
+      },
       Stability: {
         ApiKey: {
           Title: "接口密钥",
@@ -592,6 +628,39 @@ const cn = {
       Speed: {
         Title: "速度",
         SubTitle: "生成语音的速度",
+      },
+    },
+    Council: {
+      Title: "AI + AI 议会",
+      Enable: {
+        Title: "开启议会模式",
+        SubTitle: "两个或更多 AI 各自作答、互相反思，最后合并成一个答案",
+      },
+      Participant: {
+        Title: (index: number) => `成员 ${index}`,
+        SubTitle: "服务商、模型，以及可选的专属接口密钥",
+        Provider: "服务商",
+        Model: "模型",
+        ApiKey: "接口密钥",
+        ApiKeyPlaceholder: "留空则使用该服务商的共享密钥",
+        SetSynthesizer: "主持",
+        Remove: "移除",
+      },
+      AddParticipant: {
+        Title: "添加成员",
+        SubTitle: "向议会中再添加一个 AI",
+        Button: "添加 AI",
+      },
+      Rounds: {
+        Title: "反思轮数",
+        SubTitle: "AI 之间互相点评并改进的次数",
+      },
+      MergeMode: {
+        Title: "最终合并",
+        SubTitle: "如何把各成员的答案合并为一个",
+        Synthesize: "由主持模型综合（推荐）",
+        Longest: "选择最长的答案",
+        Vote: "选择共识最高的答案",
       },
     },
     Realtime: {

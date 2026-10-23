@@ -34,6 +34,7 @@ import { createPersistStore } from "../utils/store";
 import { estimateTokenLength } from "../utils/token";
 import { ModelConfig, ModelType, useAppConfig } from "./config";
 import { useAccessStore } from "./access";
+import { runCouncil, CouncilProgress, CouncilParticipantStatus } from "../utils/council";
 import { collectModelsWithDefaultModel } from "../utils/model";
 import { createEmptyMask, Mask } from "./mask";
 import { executeMcpAction, getAllTools, isMcpEnabled } from "../mcp/actions";
@@ -455,6 +456,100 @@ export const useChatStore = createPersistStore(
             botMessage,
           ]);
         });
+
+        const councilConfig = useAppConfig.getState().councilConfig;
+        const useCouncil =
+          councilConfig?.enable && councilConfig.participants.length >= 2;
+
+        if (useCouncil) {
+          const controller = new AbortController();
+          ChatControllerPool.addController(
+            session.id,
+            botMessage.id ?? messageIndex,
+            controller,
+          );
+
+          const participants = councilConfig.participants;
+          const phaseLabel = (progress: CouncilProgress) =>
+            progress.phase === "merge"
+              ? "Merging final answer"
+              : progress.phase === "draft"
+              ? "Drafting (all AIs at once)"
+              : `Reflecting round ${progress.round - 1}/${progress.totalRounds}`;
+
+          const statusIcon = (status: CouncilParticipantStatus) =>
+            status === "done"
+              ? "✅"
+              : status === "error"
+              ? "❌"
+              : status === "running"
+              ? "⏳"
+              : "•";
+
+          const renderStatus = (progress: CouncilProgress) => {
+            const lines = progress.states.map((s) => {
+              const detail =
+                s.status === "done"
+                  ? `${s.chars ?? 0} chars`
+                  : s.status === "error"
+                  ? s.error ?? "failed"
+                  : s.status === "running"
+                  ? "thinking…"
+                  : "waiting";
+              return `${statusIcon(s.status)} **${s.model}** — ${detail}`;
+            });
+            botMessage.content = `🛰️ **Council** — ${phaseLabel(
+              progress,
+            )}\n\n${lines.join("\n")}`;
+            get().updateTargetSession(session, (session) => {
+              session.messages = session.messages.concat();
+            });
+          };
+
+          runCouncil({
+            messages: sendMessages,
+            participants,
+            rounds: councilConfig.rounds,
+            synthesizerIndex: councilConfig.synthesizerIndex,
+            mergeMode: councilConfig.mergeMode,
+            temperature: modelConfig.temperature,
+            top_p: modelConfig.top_p,
+            controller,
+            onProgress: renderStatus,
+            onUpdate(merged) {
+              botMessage.streaming = true;
+              botMessage.content = merged;
+              get().updateTargetSession(session, (session) => {
+                session.messages = session.messages.concat();
+              });
+            },
+            onFinish(merged) {
+              botMessage.streaming = false;
+              botMessage.content = merged;
+              botMessage.date = new Date().toLocaleString();
+              get().onNewMessage(botMessage, session);
+              ChatControllerPool.remove(session.id, botMessage.id);
+            },
+            onError(error) {
+              const isAborted = error.message?.includes?.("aborted");
+              botMessage.content +=
+                "\n\n" +
+                prettyObject({ error: true, message: error.message });
+              botMessage.streaming = false;
+              userMessage.isError = !isAborted;
+              botMessage.isError = !isAborted;
+              get().updateTargetSession(session, (session) => {
+                session.messages = session.messages.concat();
+              });
+              ChatControllerPool.remove(
+                session.id,
+                botMessage.id ?? messageIndex,
+              );
+              console.error("[Council] failed ", error);
+            },
+          });
+          return;
+        }
 
         const api: ClientApi = getClientApi(modelConfig.providerName);
         // make request

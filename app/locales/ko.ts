@@ -509,6 +509,42 @@ const ko: PartialLocaleType = {
           SubTitle: "예: ",
         },
       },
+      OpenRouter: {
+        ApiKey: {
+          Title: "OpenRouter API 키",
+          SubTitle: "커스텀 OpenRouter API 키 사용",
+          Placeholder: "OpenRouter API 키",
+        },
+        Endpoint: {
+          Title: "엔드포인트 주소",
+          SubTitle: "예: ",
+        },
+        FetchModels: {
+          Title: "모델 목록",
+          SubTitle: "OpenRouter에서 모델 목록 가져오기",
+          Button: "모델 가져오기",
+          Success: (count: number) => `${count}개의 모델을 불러왔습니다`,
+          Fail: "모델을 가져오지 못했습니다. API 키와 주소를 확인하세요",
+        },
+      },
+      NVIDIA: {
+        ApiKey: {
+          Title: "NVIDIA NIM API 키",
+          SubTitle: "커스텀 NVIDIA NIM API 키 사용",
+          Placeholder: "nvapi-xxx",
+        },
+        Endpoint: {
+          Title: "엔드포인트 주소",
+          SubTitle: "예: ",
+        },
+        FetchModels: {
+          Title: "모델 목록",
+          SubTitle: "NVIDIA NIM에서 모델 목록 가져오기",
+          Button: "모델 가져오기",
+          Success: (count: number) => `${count}개의 모델을 불러왔습니다`,
+          Fail: "모델을 가져오지 못했습니다. API 키와 주소를 확인하세요",
+        },
+      },
       Stability: {
         ApiKey: {
           Title: "Stability API 키",
@@ -598,6 +634,40 @@ const ko: PartialLocaleType = {
         SubTitle: "생성된 음성의 속도",
       },
       Engine: "TTS Engine",
+    },
+    Council: {
+      Title: "AI + AI 평의회",
+      Enable: {
+        Title: "평의회 모드 사용",
+        SubTitle:
+          "두 개 이상의 AI가 각자 답변하고 서로 검토한 뒤 하나의 최종 답변으로 병합합니다",
+      },
+      Participant: {
+        Title: (index: number) => `패널 멤버 ${index}`,
+        SubTitle: "제공자, 모델, 선택적 전용 API 키",
+        Provider: "제공자",
+        Model: "모델",
+        ApiKey: "API 키",
+        ApiKeyPlaceholder: "비워 두면 제공자의 공용 키를 사용합니다",
+        SetSynthesizer: "의장",
+        Remove: "제거",
+      },
+      AddParticipant: {
+        Title: "패널 멤버 추가",
+        SubTitle: "평의회에 AI를 추가합니다",
+        Button: "AI 추가",
+      },
+      Rounds: {
+        Title: "검토 라운드",
+        SubTitle: "AI들이 서로 비평하고 개선하는 횟수",
+      },
+      MergeMode: {
+        Title: "최종 병합",
+        SubTitle: "패널 답변을 하나로 만드는 방식",
+        Synthesize: "의장이 종합 (권장)",
+        Longest: "가장 긴 답변 선택",
+        Vote: "가장 많이 합의된 답변 선택",
+      },
     },
     Realtime: {
       Enable: {
