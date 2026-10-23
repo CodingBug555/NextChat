@@ -16,13 +16,14 @@ export async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
-  console.log("[OpenRouter Route] params ", params);
-
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
   }
 
-  const authResult = auth(req, ModelProvider.OpenRouter);
+  // Only reached when the browser has no OpenRouter key of its own and needs
+  // the server's. Callers with a key go straight to openrouter.ai (it allows
+  // CORS), so keep this fallback hop quiet.
+  const authResult = auth(req, ModelProvider.OpenRouter, { silent: true });
   if (authResult.error) {
     return NextResponse.json(authResult, {
       status: 401,
@@ -52,9 +53,6 @@ async function request(req: NextRequest) {
   if (baseUrl.endsWith("/")) {
     baseUrl = baseUrl.slice(0, -1);
   }
-
-  console.log("[Proxy] ", path);
-  console.log("[Base Url]", baseUrl);
 
   const timeoutId = setTimeout(
     () => {

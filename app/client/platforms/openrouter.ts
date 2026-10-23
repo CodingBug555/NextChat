@@ -2,7 +2,6 @@
 // openrouter is openai-compatible, so using a similar LLMApi implementation.
 import {
   ApiPath,
-  OPENROUTER_BASE_URL,
   OpenRouter,
   DEFAULT_MODELS,
   ACCESS_CODE_PREFIX,
@@ -34,6 +33,7 @@ import {
 import { RequestPayload } from "./openai";
 
 import { fetch } from "@/app/utils/stream";
+import { resolveOpenRouterBaseUrl } from "@/app/utils/provider-routing";
 export interface OpenRouterListModelResponse {
   object: string;
   data: Array<{
@@ -49,17 +49,13 @@ export class OpenRouterApi implements LLMApi {
   path(path: string): string {
     const accessStore = useAccessStore.getState();
 
-    let baseUrl = "";
-
-    if (accessStore.useCustomConfig) {
-      baseUrl = accessStore.openrouterUrl;
-    }
-
-    if (baseUrl.length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-      const apiPath = ApiPath.OpenRouter;
-      baseUrl = isApp ? OPENROUTER_BASE_URL : apiPath;
-    }
+    let baseUrl = resolveOpenRouterBaseUrl({
+      isApp: !!getClientConfig()?.isApp,
+      useCustomConfig: accessStore.useCustomConfig,
+      customUrl: accessStore.openrouterUrl,
+      // With a key of our own there is nothing to gain from the extra hop.
+      hasOwnKey: validString(accessStore.openrouterApiKey),
+    });
 
     if (baseUrl.endsWith("/")) {
       baseUrl = baseUrl.slice(0, baseUrl.length - 1);
@@ -70,8 +66,6 @@ export class OpenRouterApi implements LLMApi {
     ) {
       baseUrl = "https://" + baseUrl;
     }
-
-    console.log("[Proxy Endpoint] ", baseUrl, path);
 
     return [baseUrl, path].join("/");
   }
@@ -118,8 +112,6 @@ export class OpenRouterApi implements LLMApi {
       top_p: modelConfig.top_p,
       // max_tokens: Math.max(modelConfig.max_tokens, 1024),
     };
-
-    console.log("[Request] openrouter payload: ", requestPayload);
 
     const shouldStream = !!options.config.stream;
     const controller = new AbortController();

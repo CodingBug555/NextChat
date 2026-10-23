@@ -24,7 +24,11 @@ function parseApiKey(bearToken: string) {
   };
 }
 
-export function auth(req: NextRequest, modelProvider: ModelProvider) {
+export function auth(
+  req: NextRequest,
+  modelProvider: ModelProvider,
+  options: { silent?: boolean } = {},
+) {
   const authToken = req.headers.get("Authorization") ?? "";
 
   // check if it is openai api key or user token
@@ -33,11 +37,13 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
   const hashedCode = md5.hash(accessCode ?? "").trim();
 
   const serverConfig = getServerSideConfig();
-  console.log("[Auth] allowed hashed codes: ", [...serverConfig.codes]);
-  console.log("[Auth] got access code:", accessCode);
-  console.log("[Auth] hashed access code:", hashedCode);
-  console.log("[User IP] ", getIP(req));
-  console.log("[Time] ", new Date().toLocaleString());
+  if (!options.silent) {
+    console.log("[Auth] allowed hashed codes: ", [...serverConfig.codes]);
+    console.log("[Auth] got access code:", accessCode);
+    console.log("[Auth] hashed access code:", hashedCode);
+    console.log("[User IP] ", getIP(req));
+    console.log("[Time] ", new Date().toLocaleString());
+  }
 
   if (serverConfig.needCode && !serverConfig.codes.has(hashedCode) && !apiKey) {
     return {
@@ -120,13 +126,13 @@ export function auth(req: NextRequest, modelProvider: ModelProvider) {
     }
 
     if (systemApiKey) {
-      console.log("[Auth] use system api key");
+      if (!options.silent) console.log("[Auth] use system api key");
       req.headers.set("Authorization", `Bearer ${systemApiKey}`);
     } else {
-      console.log("[Auth] admin did not provide an api key");
+      if (!options.silent) console.log("[Auth] admin did not provide an api key");
     }
   } else {
-    console.log("[Auth] use user api key");
+    if (!options.silent) console.log("[Auth] use user api key");
   }
 
   return {

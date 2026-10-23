@@ -9,7 +9,9 @@ import {
 import { CouncilParticipant } from "../store/config";
 import { RequestMessage } from "../client/api";
 import { getHeadersForProvider } from "../client/api";
+import { getClientConfig } from "../config/client";
 import { prettyObject } from "./format";
+import { resolveOpenRouterBaseUrl } from "./provider-routing";
 import { fetch } from "./stream";
 
 /**
@@ -63,7 +65,10 @@ export interface CouncilOptions {
   onError?: (err: Error) => void;
 }
 
-function providerApiPath(providerName: ServiceProvider): string {
+function providerApiPath(
+  providerName: ServiceProvider,
+  hasOwnKey: boolean = false,
+): string {
   switch (providerName) {
     case ServiceProvider.Google:
       return ApiPath.Google;
@@ -90,7 +95,14 @@ function providerApiPath(providerName: ServiceProvider): string {
     case ServiceProvider["302.AI"]:
       return ApiPath["302.AI"];
     case ServiceProvider.OpenRouter:
-      return ApiPath.OpenRouter;
+      // OpenRouter allows CORS, so a participant with its own key skips the
+      // same-origin hop. NVIDIA has no CORS headers and must stay on the route.
+      return resolveOpenRouterBaseUrl({
+        isApp: !!getClientConfig()?.isApp,
+        useCustomConfig: false,
+        customUrl: "",
+        hasOwnKey,
+      });
     case ServiceProvider.NVIDIA:
       return ApiPath.NVIDIA;
     default:
@@ -124,9 +136,10 @@ async function askParticipant(
     signal: AbortSignal;
   },
 ): Promise<string> {
-  const path = `${providerApiPath(participant.providerName)}/${providerChatPath(
+  const path = `${providerApiPath(
     participant.providerName,
-  )}`;
+    !!participant.apiKey?.trim(),
+  )}/${providerChatPath(participant.providerName)}`;
   // An empty participant key means "use the provider's key from Settings",
   // so pass undefined rather than "" (which would skip that fallback).
   const override = participant.apiKey?.trim() ? participant.apiKey : undefined;

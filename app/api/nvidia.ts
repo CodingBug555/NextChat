@@ -16,13 +16,14 @@ export async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
-  console.log("[NVIDIA Route] params ", params);
-
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
   }
 
-  const authResult = auth(req, ModelProvider.NVIDIA);
+  // NVIDIA NIM sends no CORS headers, so browsers cannot call it directly and
+  // every request must come through here. Keep this hop quiet: no request
+  // metadata in the logs.
+  const authResult = auth(req, ModelProvider.NVIDIA, { silent: true });
   if (authResult.error) {
     return NextResponse.json(authResult, {
       status: 401,
@@ -52,9 +53,6 @@ async function request(req: NextRequest) {
   if (baseUrl.endsWith("/")) {
     baseUrl = baseUrl.slice(0, -1);
   }
-
-  console.log("[Proxy] ", path);
-  console.log("[Base Url]", baseUrl);
 
   const timeoutId = setTimeout(
     () => {
