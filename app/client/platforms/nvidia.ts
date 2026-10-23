@@ -71,8 +71,6 @@ export class NvidiaApi implements LLMApi {
       baseUrl = "https://" + baseUrl;
     }
 
-    console.log("[Proxy Endpoint] ", baseUrl, path);
-
     return [baseUrl, path].join("/");
   }
 
@@ -118,8 +116,6 @@ export class NvidiaApi implements LLMApi {
       top_p: modelConfig.top_p,
       // max_tokens: Math.max(modelConfig.max_tokens, 1024),
     };
-
-    console.log("[Request] nvidia payload: ", requestPayload);
 
     const shouldStream = !!options.config.stream;
     const controller = new AbortController();
