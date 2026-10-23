@@ -1,0 +1,34 @@
+// Council panel member rows.
+//
+// `ListItem` is a horizontal flex row, but each participant needs a stacked
+// form. The controls also have to override the global `input`/`select` rules
+// (centered text, `max-width: 50%`) and `Select`'s `max-width: fit-content`,
+// so they are nested here to win on specificity rather than rely on order.
+.participant-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+
+  .full-width-select {
+    width: 100%;
+    max-width: unset;
+
+    select {
+      width: 100%;
+      text-align: left;
+    }
+  }
+
+  .api-key-input {
+    width: 100%;
+    max-width: unset;
+    text-align: left;
+  }
+
+  .participant-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
