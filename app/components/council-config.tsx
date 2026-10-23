@@ -11,6 +11,7 @@ import { IconButton } from "./button";
 import AddIcon from "../icons/add.svg";
 import DeleteIcon from "../icons/delete.svg";
 import ResetIcon from "../icons/reload.svg";
+import styles from "./council-config.module.scss";
 
 export function CouncilConfigList(props: {
   councilConfig: CouncilConfig;
@@ -96,17 +97,12 @@ export function CouncilConfigList(props: {
               key={participant.id}
               title={Locale.Settings.Council.Participant.Title(index + 1)}
               subTitle={Locale.Settings.Council.Participant.SubTitle}
+              vertical
             >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "8px",
-                  width: "100%",
-                }}
-              >
+              <div className={styles["participant-fields"]}>
                 <Select
                   aria-label={Locale.Settings.Council.Participant.Provider}
+                  className={styles["full-width-select"]}
                   value={participant.providerName}
                   onChange={(e) => {
                     const providerName = e.currentTarget
@@ -124,6 +120,7 @@ export function CouncilConfigList(props: {
                 </Select>
                 <Select
                   aria-label={Locale.Settings.Council.Participant.Model}
+                  className={styles["full-width-select"]}
                   value={participant.model}
                   onChange={(e) =>
                     patchParticipant(index, { model: e.currentTarget.value })
@@ -139,6 +136,7 @@ export function CouncilConfigList(props: {
                 </Select>
                 <input
                   aria-label={Locale.Settings.Council.Participant.ApiKey}
+                  className={styles["api-key-input"]}
                   type="text"
                   value={participant.apiKey ?? ""}
                   placeholder={Locale.Settings.Council.Participant.ApiKeyPlaceholder}
@@ -146,7 +144,7 @@ export function CouncilConfigList(props: {
                     patchParticipant(index, { apiKey: e.currentTarget.value })
                   }
                 ></input>
-                <div style={{ display: "flex", gap: "8px" }}>
+                <div className={styles["participant-actions"]}>
                   <IconButton
                     aria={Locale.Settings.Council.Participant.SetSynthesizer}
                     text={Locale.Settings.Council.Participant.SetSynthesizer}
