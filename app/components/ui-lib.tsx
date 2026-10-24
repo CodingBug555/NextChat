@@ -11,6 +11,7 @@ import MaxIcon from "../icons/max.svg";
 import MinIcon from "../icons/min.svg";
 
 import Locale from "../locales";
+import { filterSelectorItems } from "../utils/search";
 
 import { createRoot } from "react-dom/client";
 import React, {
@@ -18,6 +19,7 @@ import React, {
   HTMLProps,
   MouseEvent,
   useEffect,
+  useMemo,
   useState,
   useCallback,
   useRef,
@@ -298,12 +300,57 @@ export function Select(
   props: React.DetailedHTMLProps<
     React.SelectHTMLAttributes<HTMLSelectElement> & {
       align?: "left" | "center";
+      /** Render a filter box above the options. */
+      searchable?: boolean;
+      searchPlaceholder?: string;
     },
     HTMLSelectElement
   >,
 ) {
-  const { className, children, align, ...otherProps } = props;
-  return (
+  const {
+    className,
+    children,
+    align,
+    searchable,
+    searchPlaceholder,
+    ...otherProps
+  } = props;
+
+  const [query, setQuery] = useState("");
+
+  // Filter the option/optgroup children by their visible label. Kept here so
+  // every model dropdown (grouped by provider or flat) gets the same behaviour.
+  const filteredChildren = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!searchable || q.length === 0) return children;
+
+    const keep = (el: React.ReactNode): React.ReactNode => {
+      if (!React.isValidElement(el)) return null;
+      const childProps = el.props as { children?: React.ReactNode };
+      if (el.type === "optgroup") {
+        const options = React.Children.toArray(childProps.children).filter(
+          (option) =>
+            React.isValidElement(option) &&
+            String((option.props as { children?: React.ReactNode }).children)
+              .toLowerCase()
+              .includes(q),
+        );
+        return options.length
+          ? React.cloneElement(el, {}, options as React.ReactNode)
+          : null;
+      }
+      if (el.type === "option") {
+        return String(childProps.children).toLowerCase().includes(q)
+          ? el
+          : null;
+      }
+      return el;
+    };
+
+    return React.Children.toArray(children).map(keep);
+  }, [children, query, searchable]);
+
+  const selectElement = (
     <div
       className={clsx(
         styles["select-with-icon"],
@@ -314,9 +361,26 @@ export function Select(
       )}
     >
       <select className={styles["select-with-icon-select"]} {...otherProps}>
-        {children}
+        {filteredChildren}
       </select>
       <DownIcon className={styles["select-with-icon-icon"]} />
+    </div>
+  );
+
+  if (!searchable) {
+    return selectElement;
+  }
+
+  return (
+    <div className={styles["searchable-select"]}>
+      <input
+        type="search"
+        className={styles["searchable-select-input"]}
+        placeholder={searchPlaceholder ?? Locale.Select.Search}
+        value={query}
+        onChange={(e) => setQuery(e.currentTarget.value)}
+      />
+      {selectElement}
     </div>
   );
 }
@@ -485,6 +549,10 @@ export function Selector<T>(props: {
   onSelection?: (selection: T[]) => void;
   onClose?: () => void;
   multiple?: boolean;
+  /** Show a filter box above the list. Defaults to true for long lists. */
+  searchable?: boolean;
+  /** Force the search box on/off regardless of list length. */
+  forceSearch?: boolean;
 }) {
   const [selectedValues, setSelectedValues] = useState<T[]>(
     Array.isArray(props.defaultSelectedValue)
@@ -493,6 +561,17 @@ export function Selector<T>(props: {
       ? [props.defaultSelectedValue]
       : [],
   );
+
+  // Long lists (models, plugins, discovery) are unusable without a filter, so
+  // default the box on once the list is longer than a screenful.
+  const showSearch =
+    props.forceSearch ?? props.searchable ?? props.items.length > 12;
+  const [searchText, setSearchText] = useState("");
+
+  const filteredItems = useMemo(() => {
+    if (!showSearch) return props.items;
+    return filterSelectorItems(props.items, searchText);
+  }, [props.items, searchText, showSearch]);
 
   const handleSelection = (e: MouseEvent, value: T) => {
     if (props.multiple) {
@@ -512,8 +591,23 @@ export function Selector<T>(props: {
   return (
     <div className={styles["selector"]} onClick={() => props.onClose?.()}>
       <div className={styles["selector-content"]}>
+        {showSearch && (
+          <div
+            className={styles["selector-search"]}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <input
+              type="text"
+              className={styles["selector-search-input"]}
+              placeholder={Locale.Select.Search}
+              value={searchText}
+              autoFocus
+              onChange={(e) => setSearchText(e.currentTarget.value)}
+            />
+          </div>
+        )}
         <List>
-          {props.items.map((item, i) => {
+          {filteredItems.map((item, i) => {
             const selected = selectedValues.includes(item.value);
             return (
               <ListItem

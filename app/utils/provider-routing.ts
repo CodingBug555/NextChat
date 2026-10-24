@@ -1,4 +1,8 @@
-import { ApiPath, OPENROUTER_BASE_URL } from "../constant";
+import {
+  ApiPath,
+  OPENROUTER_BASE_URL,
+  TOKENHARBOR_BASE_URL,
+} from "../constant";
 
 /**
  * Routing policy for OpenRouter.
@@ -22,4 +26,24 @@ export function resolveOpenRouterBaseUrl(options: {
   }
 
   return isApp || hasOwnKey ? OPENROUTER_BASE_URL : ApiPath.OpenRouter;
+}
+
+/**
+ * Routing policy for Token Harbor. Same shape as OpenRouter: it allows CORS, so
+ * a browser holding its own `thk_…` key talks to tokenharbor.ai directly and
+ * only keyless callers need the same-origin `/api/tokenharbor` hop.
+ */
+export function resolveTokenHarborBaseUrl(options: {
+  isApp: boolean;
+  useCustomConfig: boolean;
+  customUrl: string;
+  hasOwnKey: boolean;
+}): string {
+  const { isApp, useCustomConfig, customUrl, hasOwnKey } = options;
+
+  if (useCustomConfig && customUrl.length > 0) {
+    return customUrl;
+  }
+
+  return isApp || hasOwnKey ? TOKENHARBOR_BASE_URL : ApiPath.TokenHarbor;
 }

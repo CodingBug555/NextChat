@@ -28,6 +28,7 @@ export function ModelConfigList(props: {
           aria-label={Locale.Settings.Model}
           value={value}
           align="left"
+          searchable
           onChange={(e) => {
             const [model, providerName] = getModelProvider(
               e.currentTarget.value,
@@ -249,6 +250,7 @@ export function ModelConfigList(props: {
           className={styles["select-compress-model"]}
           aria-label={Locale.Settings.CompressModel.Title}
           value={compressModelValue}
+          searchable
           onChange={(e) => {
             const [model, providerName] = getModelProvider(
               e.currentTarget.value,

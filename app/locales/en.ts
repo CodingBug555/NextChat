@@ -526,6 +526,24 @@ const en: LocaleType = {
           Fail: "Failed to fetch models, check your API key and endpoint",
         },
       },
+      TokenHarbor: {
+        ApiKey: {
+          Title: "Token Harbor API Key",
+          SubTitle: "Use a custom Token Harbor API Key",
+          Placeholder: "thk_xxx",
+        },
+        Endpoint: {
+          Title: "Endpoint Address",
+          SubTitle: "Example: ",
+        },
+        FetchModels: {
+          Title: "Model List",
+          SubTitle: "Fetch the model list from Token Harbor",
+          Button: "Fetch Models",
+          Success: (count: number) => `Loaded ${count} models`,
+          Fail: "Failed to fetch models, check your API key and endpoint",
+        },
+      },
       Stability: {
         ApiKey: {
           Title: "Stability API Key",
@@ -737,9 +755,6 @@ const en: LocaleType = {
   },
   Discovery: {
     Name: "Discovery",
-  },
-  Mcp: {
-    Name: "MCP",
   },
   FineTuned: {
     Sysmessage: "You are an assistant that",

@@ -100,6 +100,7 @@ export function RealtimeConfigList(props: {
             <Select
               aria-label={Locale.Settings.Realtime.Model.Title}
               value={props.realtimeConfig.model}
+              searchable
               onChange={(e) => {
                 props.updateConfig((config) => (config.model = e.target.value));
               }}

@@ -279,6 +279,20 @@
   }
 }
 
+.searchable-select {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+  min-width: 220px;
+
+  .searchable-select-input {
+    width: 100%;
+    max-width: 100%;
+    text-align: left;
+  }
+}
+
 .modal-input {
   height: 100%;
   width: 100%;
@@ -335,5 +349,16 @@
       }
     }
   }
-}
 
+  // Nested under `.selector` so the rules outrank the global
+  // `input { text-align: center }` and `input[type="text"] { max-width: 50% }`.
+  .selector-search {
+    padding: 10px;
+
+    .selector-search-input {
+      width: 100%;
+      max-width: 100%;
+      text-align: left;
+    }
+  }
+}

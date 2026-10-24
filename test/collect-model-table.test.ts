@@ -49,3 +49,32 @@ describe("collectModels", () => {
     expect(models.some((m) => m.name === "gpt-4")).toBe(true);
   });
 });
+
+describe("Token Harbor models in DEFAULT_MODELS", () => {
+  const tokenHarbor = DEFAULT_MODELS.filter(
+    (m) => m.provider.providerType === "tokenharbor",
+  );
+
+  test("are seeded into the picker with the tokenharbor provider", () => {
+    expect(tokenHarbor.length).toBeGreaterThan(0);
+    expect(tokenHarbor.every((m) => m.provider.providerName === "TokenHarbor")).toBe(
+      true,
+    );
+    expect(tokenHarbor.every((m) => m.available)).toBe(true);
+  });
+
+  test("include the catalogue's current flagship ids", () => {
+    const names = tokenHarbor.map((m) => m.name);
+    expect(names).toContain("claude-opus-5.5");
+    expect(names).toContain("gpt-6-astra");
+    expect(names).toContain("kimi-k3.1-pro");
+  });
+
+  test("collect into the model table under name@tokenharbor", () => {
+    const table = collectModelTable(DEFAULT_MODELS, "");
+    expect(table["claude-opus-5.5@tokenharbor"]).toBeDefined();
+    expect(table["claude-opus-5.5@tokenharbor"]?.provider?.id).toBe(
+      "tokenharbor",
+    );
+  });
+});

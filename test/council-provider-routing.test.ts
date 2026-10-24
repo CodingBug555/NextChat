@@ -5,7 +5,12 @@
  *
  * Stubs only the network boundary and records the URL of every request.
  */
-import { ApiPath, OPENROUTER_BASE_URL, ServiceProvider } from "../app/constant";
+import {
+  ApiPath,
+  OPENROUTER_BASE_URL,
+  ServiceProvider,
+  TOKENHARBOR_BASE_URL,
+} from "../app/constant";
 import type { CouncilParticipant } from "../app/store/config";
 const urls: string[] = [];
 jest.mock("../app/utils/stream", () => ({
@@ -80,6 +85,37 @@ describe("council provider routing", () => {
     expect(urls.length).toBeGreaterThan(0);
     urls.forEach((u) => {
       expect(u.startsWith(`${ApiPath.NVIDIA}/`)).toBe(true);
+    });
+  });
+
+  test("a Token Harbor participant with its own key calls Token Harbor directly", async () => {
+    await run([
+      {
+        id: "a",
+        providerName: ServiceProvider.TokenHarbor,
+        model: "openai/gpt-4o",
+        apiKey: "thk-own",
+      },
+    ]);
+    expect(urls.length).toBeGreaterThan(0);
+    urls.forEach((u) => {
+      expect(u.startsWith(`${TOKENHARBOR_BASE_URL}/`)).toBe(true);
+      expect(u.includes(ApiPath.TokenHarbor)).toBe(false);
+    });
+  });
+
+  test("a Token Harbor participant without a key uses the same-origin route", async () => {
+    await run([
+      {
+        id: "a",
+        providerName: ServiceProvider.TokenHarbor,
+        model: "openai/gpt-4o",
+        apiKey: "",
+      },
+    ]);
+    expect(urls.length).toBeGreaterThan(0);
+    urls.forEach((u) => {
+      expect(u.startsWith(`${ApiPath.TokenHarbor}/`)).toBe(true);
     });
   });
 });

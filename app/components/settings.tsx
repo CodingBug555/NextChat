@@ -78,6 +78,7 @@ import {
   AI302,
   OpenRouter,
   NVIDIA,
+  TokenHarbor,
 } from "../constant";
 import { Prompt, SearchService, usePromptStore } from "../store/prompt";
 import { ErrorBoundary } from "./error";
@@ -1438,6 +1439,43 @@ export function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessStore.provider]);
 
+  const [fetchingTokenHarborModels, setFetchingTokenHarborModels] =
+    useState(false);
+  const autoFetchedTokenHarbor = useRef(false);
+
+  async function fetchTokenHarborModels() {
+    setFetchingTokenHarborModels(true);
+    try {
+      const api = getClientApi(ServiceProvider.TokenHarbor);
+      const models = await api.llm.models();
+      if (!models || models.length === 0) {
+        showToast(Locale.Settings.Access.TokenHarbor.FetchModels.Fail);
+        return;
+      }
+      config.mergeProviderModels("tokenharbor", models);
+      showToast(
+        Locale.Settings.Access.TokenHarbor.FetchModels.Success(models.length),
+      );
+    } catch (e) {
+      console.error("[TokenHarbor] failed to fetch models", e);
+      showToast(Locale.Settings.Access.TokenHarbor.FetchModels.Fail);
+    } finally {
+      setFetchingTokenHarborModels(false);
+    }
+  }
+
+  // auto-load the Token Harbor catalog the first time the provider is selected
+  useEffect(() => {
+    if (
+      accessStore.provider === ServiceProvider.TokenHarbor &&
+      !autoFetchedTokenHarbor.current
+    ) {
+      autoFetchedTokenHarbor.current = true;
+      fetchTokenHarborModels();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessStore.provider]);
+
   const nvidiaConfigComponent = accessStore.provider ===
     ServiceProvider.NVIDIA && (
     <>
@@ -1491,58 +1529,111 @@ export function Settings() {
     </>
   );
 
-  const openrouterConfigComponent =
-    accessStore.provider === ServiceProvider.OpenRouter && (
-      <>
-        <ListItem
-          title={Locale.Settings.Access.OpenRouter.Endpoint.Title}
-          subTitle={
-            Locale.Settings.Access.OpenRouter.Endpoint.SubTitle +
-            OpenRouter.ExampleEndpoint
+  const tokenHarborConfigComponent = accessStore.provider ===
+    ServiceProvider.TokenHarbor && (
+    <>
+      <ListItem
+        title={Locale.Settings.Access.TokenHarbor.Endpoint.Title}
+        subTitle={
+          Locale.Settings.Access.TokenHarbor.Endpoint.SubTitle +
+          TokenHarbor.ExampleEndpoint
+        }
+      >
+        <input
+          aria-label={Locale.Settings.Access.TokenHarbor.Endpoint.Title}
+          type="text"
+          value={accessStore.tokenHarborUrl}
+          placeholder={TokenHarbor.ExampleEndpoint}
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.tokenHarborUrl = e.currentTarget.value),
+            )
           }
-        >
-          <input
-            aria-label={Locale.Settings.Access.OpenRouter.Endpoint.Title}
-            type="text"
-            value={accessStore.openrouterUrl}
-            placeholder={OpenRouter.ExampleEndpoint}
-            onChange={(e) =>
-              accessStore.update(
-                (access) => (access.openrouterUrl = e.currentTarget.value),
-              )
-            }
-          ></input>
-        </ListItem>
-        <ListItem
-          title={Locale.Settings.Access.OpenRouter.ApiKey.Title}
-          subTitle={Locale.Settings.Access.OpenRouter.ApiKey.SubTitle}
-        >
-          <PasswordInput
-            aria-label={Locale.Settings.Access.OpenRouter.ApiKey.Title}
-            value={accessStore.openrouterApiKey}
-            type="text"
-            placeholder={Locale.Settings.Access.OpenRouter.ApiKey.Placeholder}
-            onChange={(e) => {
-              accessStore.update(
-                (access) => (access.openrouterApiKey = e.currentTarget.value),
-              );
-            }}
-          />
-        </ListItem>
-        <ListItem
-          title={Locale.Settings.Access.OpenRouter.FetchModels.Title}
-          subTitle={Locale.Settings.Access.OpenRouter.FetchModels.SubTitle}
-        >
-          <IconButton
-            aria={Locale.Settings.Access.OpenRouter.FetchModels.Button}
-            text={Locale.Settings.Access.OpenRouter.FetchModels.Button}
-            icon={fetchingOpenRouterModels ? <LoadingIcon /> : <ResetIcon />}
-            disabled={fetchingOpenRouterModels}
-            onClick={fetchOpenRouterModels}
-          />
-        </ListItem>
-      </>
-    );
+        ></input>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.TokenHarbor.ApiKey.Title}
+        subTitle={Locale.Settings.Access.TokenHarbor.ApiKey.SubTitle}
+      >
+        <PasswordInput
+          aria-label={Locale.Settings.Access.TokenHarbor.ApiKey.Title}
+          value={accessStore.tokenHarborApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.TokenHarbor.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.tokenHarborApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.TokenHarbor.FetchModels.Title}
+        subTitle={Locale.Settings.Access.TokenHarbor.FetchModels.SubTitle}
+      >
+        <IconButton
+          aria={Locale.Settings.Access.TokenHarbor.FetchModels.Button}
+          text={Locale.Settings.Access.TokenHarbor.FetchModels.Button}
+          icon={fetchingTokenHarborModels ? <LoadingIcon /> : <ResetIcon />}
+          disabled={fetchingTokenHarborModels}
+          onClick={fetchTokenHarborModels}
+        />
+      </ListItem>
+    </>
+  );
+
+  const openrouterConfigComponent = accessStore.provider ===
+    ServiceProvider.OpenRouter && (
+    <>
+      <ListItem
+        title={Locale.Settings.Access.OpenRouter.Endpoint.Title}
+        subTitle={
+          Locale.Settings.Access.OpenRouter.Endpoint.SubTitle +
+          OpenRouter.ExampleEndpoint
+        }
+      >
+        <input
+          aria-label={Locale.Settings.Access.OpenRouter.Endpoint.Title}
+          type="text"
+          value={accessStore.openrouterUrl}
+          placeholder={OpenRouter.ExampleEndpoint}
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.openrouterUrl = e.currentTarget.value),
+            )
+          }
+        ></input>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.OpenRouter.ApiKey.Title}
+        subTitle={Locale.Settings.Access.OpenRouter.ApiKey.SubTitle}
+      >
+        <PasswordInput
+          aria-label={Locale.Settings.Access.OpenRouter.ApiKey.Title}
+          value={accessStore.openrouterApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.OpenRouter.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.openrouterApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.OpenRouter.FetchModels.Title}
+        subTitle={Locale.Settings.Access.OpenRouter.FetchModels.SubTitle}
+      >
+        <IconButton
+          aria={Locale.Settings.Access.OpenRouter.FetchModels.Button}
+          text={Locale.Settings.Access.OpenRouter.FetchModels.Button}
+          icon={fetchingOpenRouterModels ? <LoadingIcon /> : <ResetIcon />}
+          disabled={fetchingOpenRouterModels}
+          onClick={fetchOpenRouterModels}
+        />
+      </ListItem>
+    </>
+  );
 
   const stabilityConfigComponent = accessStore.provider ===
     ServiceProvider.Stability && (
@@ -1642,44 +1733,44 @@ export function Settings() {
     </>
   );
 
-  const ai302ConfigComponent = accessStore.provider === ServiceProvider["302.AI"] && (
+  const ai302ConfigComponent = accessStore.provider ===
+    ServiceProvider["302.AI"] && (
     <>
       <ListItem
-          title={Locale.Settings.Access.AI302.Endpoint.Title}
-          subTitle={
-            Locale.Settings.Access.AI302.Endpoint.SubTitle +
-            AI302.ExampleEndpoint
+        title={Locale.Settings.Access.AI302.Endpoint.Title}
+        subTitle={
+          Locale.Settings.Access.AI302.Endpoint.SubTitle + AI302.ExampleEndpoint
+        }
+      >
+        <input
+          aria-label={Locale.Settings.Access.AI302.Endpoint.Title}
+          type="text"
+          value={accessStore.ai302Url}
+          placeholder={AI302.ExampleEndpoint}
+          onChange={(e) =>
+            accessStore.update(
+              (access) => (access.ai302Url = e.currentTarget.value),
+            )
           }
-        >
-          <input
-            aria-label={Locale.Settings.Access.AI302.Endpoint.Title}
-            type="text"
-            value={accessStore.ai302Url}
-            placeholder={AI302.ExampleEndpoint}
-            onChange={(e) =>
-              accessStore.update(
-                (access) => (access.ai302Url = e.currentTarget.value),
-              )
-            }
-          ></input>
-        </ListItem>
-        <ListItem
-          title={Locale.Settings.Access.AI302.ApiKey.Title}
-          subTitle={Locale.Settings.Access.AI302.ApiKey.SubTitle}
-        >
-          <PasswordInput
-            aria-label={Locale.Settings.Access.AI302.ApiKey.Title}
-            value={accessStore.ai302ApiKey}
-            type="text"
-            placeholder={Locale.Settings.Access.AI302.ApiKey.Placeholder}
-            onChange={(e) => {
-              accessStore.update(
-                (access) => (access.ai302ApiKey = e.currentTarget.value),
-              );
-            }}
-          />
-        </ListItem>
-      </>
+        ></input>
+      </ListItem>
+      <ListItem
+        title={Locale.Settings.Access.AI302.ApiKey.Title}
+        subTitle={Locale.Settings.Access.AI302.ApiKey.SubTitle}
+      >
+        <PasswordInput
+          aria-label={Locale.Settings.Access.AI302.ApiKey.Title}
+          value={accessStore.ai302ApiKey}
+          type="text"
+          placeholder={Locale.Settings.Access.AI302.ApiKey.Placeholder}
+          onChange={(e) => {
+            accessStore.update(
+              (access) => (access.ai302ApiKey = e.currentTarget.value),
+            );
+          }}
+        />
+      </ListItem>
+    </>
   );
 
   return (
@@ -2049,6 +2140,7 @@ export function Settings() {
                   {ai302ConfigComponent}
                   {openrouterConfigComponent}
                   {nvidiaConfigComponent}
+                  {tokenHarborConfigComponent}
                 </>
               )}
             </>

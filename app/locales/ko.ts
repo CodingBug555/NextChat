@@ -545,6 +545,24 @@ const ko: PartialLocaleType = {
           Fail: "모델을 가져오지 못했습니다. API 키와 주소를 확인하세요",
         },
       },
+      TokenHarbor: {
+        ApiKey: {
+          Title: "Token Harbor API 키",
+          SubTitle: "커스텀 Token Harbor API 키 사용",
+          Placeholder: "thk_xxx",
+        },
+        Endpoint: {
+          Title: "엔드포인트 주소",
+          SubTitle: "예: ",
+        },
+        FetchModels: {
+          Title: "모델 목록",
+          SubTitle: "Token Harbor에서 모델 목록 가져오기",
+          Button: "모델 가져오기",
+          Success: (count: number) => `${count}개의 모델을 불러왔습니다`,
+          Fail: "모델을 가져오지 못했습니다. API 키와 주소를 확인하세요",
+        },
+      },
       Stability: {
         ApiKey: {
           Title: "Stability API 키",
@@ -732,9 +750,6 @@ const ko: PartialLocaleType = {
   },
   Discovery: {
     Name: "디스커버리",
-  },
-  Mcp: {
-    Name: "MCP 플러그인",
   },
   FineTuned: {
     Sysmessage: "당신은 보조자입니다.",

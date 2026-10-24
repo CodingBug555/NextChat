@@ -27,6 +27,7 @@ import { SiliconflowApi } from "./platforms/siliconflow";
 import { Ai302Api } from "./platforms/ai302";
 import { OpenRouterApi } from "./platforms/openrouter";
 import { NvidiaApi } from "./platforms/nvidia";
+import { TokenHarborApi } from "./platforms/tokenharbor";
 
 export const ROLES = ["system", "user", "assistant"] as const;
 export type MessageRole = (typeof ROLES)[number];
@@ -185,6 +186,9 @@ export class ClientApi {
       case ModelProvider.NVIDIA:
         this.llm = new NvidiaApi();
         break;
+      case ModelProvider.TokenHarbor:
+        this.llm = new TokenHarborApi();
+        break;
       default:
         this.llm = new ChatGPTApi();
     }
@@ -284,6 +288,8 @@ function resolveApiKeyForProvider(
       return accessStore.openrouterApiKey;
     case ServiceProvider.NVIDIA:
       return accessStore.nvidiaApiKey;
+    case ServiceProvider.TokenHarbor:
+      return accessStore.tokenHarborApiKey;
     default:
       return accessStore.openaiApiKey;
   }
@@ -385,6 +391,8 @@ export function getClientApi(provider: ServiceProvider): ClientApi {
       return new ClientApi(ModelProvider.OpenRouter);
     case ServiceProvider.NVIDIA:
       return new ClientApi(ModelProvider.NVIDIA);
+    case ServiceProvider.TokenHarbor:
+      return new ClientApi(ModelProvider.TokenHarbor);
     default:
       return new ClientApi(ModelProvider.GPT);
   }

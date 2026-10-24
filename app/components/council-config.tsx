@@ -109,7 +109,10 @@ export function CouncilConfigList(props: {
                       .value as ServiceProvider;
                     const firstModel =
                       modelsByProvider[providerName]?.[0]?.name ?? "";
-                    patchParticipant(index, { providerName, model: firstModel });
+                    patchParticipant(index, {
+                      providerName,
+                      model: firstModel,
+                    });
                   }}
                 >
                   {COUNCIL_PROVIDERS.map((p) => (
@@ -122,6 +125,7 @@ export function CouncilConfigList(props: {
                   aria-label={Locale.Settings.Council.Participant.Model}
                   className={styles["full-width-select"]}
                   value={participant.model}
+                  searchable
                   onChange={(e) =>
                     patchParticipant(index, { model: e.currentTarget.value })
                   }
@@ -139,7 +143,9 @@ export function CouncilConfigList(props: {
                   className={styles["api-key-input"]}
                   type="text"
                   value={participant.apiKey ?? ""}
-                  placeholder={Locale.Settings.Council.Participant.ApiKeyPlaceholder}
+                  placeholder={
+                    Locale.Settings.Council.Participant.ApiKeyPlaceholder
+                  }
                   onChange={(e) =>
                     patchParticipant(index, { apiKey: e.currentTarget.value })
                   }
@@ -224,7 +230,9 @@ export function CouncilConfigList(props: {
               <option value="longest">
                 {Locale.Settings.Council.MergeMode.Longest}
               </option>
-              <option value="vote">{Locale.Settings.Council.MergeMode.Vote}</option>
+              <option value="vote">
+                {Locale.Settings.Council.MergeMode.Vote}
+              </option>
             </Select>
           </ListItem>
         </>

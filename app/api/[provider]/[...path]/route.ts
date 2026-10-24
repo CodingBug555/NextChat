@@ -18,6 +18,7 @@ import { handle as proxyHandler } from "../../proxy";
 import { handle as ai302Handler } from "../../302ai";
 import { handle as openrouterHandler } from "../../openrouter";
 import { handle as nvidiaHandler } from "../../nvidia";
+import { handle as tokenHarborHandler } from "../../tokenharbor";
 
 async function handle(
   req: NextRequest,
@@ -61,6 +62,8 @@ async function handle(
       return openrouterHandler(req, { params });
     case ApiPath.NVIDIA:
       return nvidiaHandler(req, { params });
+    case ApiPath.TokenHarbor:
+      return tokenHarborHandler(req, { params });
     default:
       return proxyHandler(req, { params });
   }

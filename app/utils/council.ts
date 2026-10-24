@@ -5,13 +5,17 @@ import {
   DeepSeek,
   OpenaiPath,
   ServiceProvider,
+  TokenHarbor,
 } from "../constant";
 import { CouncilParticipant } from "../store/config";
 import { RequestMessage } from "../client/api";
 import { getHeadersForProvider } from "../client/api";
 import { getClientConfig } from "../config/client";
 import { prettyObject } from "./format";
-import { resolveOpenRouterBaseUrl } from "./provider-routing";
+import {
+  resolveOpenRouterBaseUrl,
+  resolveTokenHarborBaseUrl,
+} from "./provider-routing";
 import { fetch } from "./stream";
 
 /**
@@ -29,6 +33,7 @@ export const COUNCIL_PROVIDERS: ServiceProvider[] = [
   ServiceProvider["302.AI"],
   ServiceProvider.OpenRouter,
   ServiceProvider.NVIDIA,
+  ServiceProvider.TokenHarbor,
   ServiceProvider.ByteDance,
 ];
 
@@ -105,6 +110,15 @@ function providerApiPath(
       });
     case ServiceProvider.NVIDIA:
       return ApiPath.NVIDIA;
+    case ServiceProvider.TokenHarbor:
+      // Token Harbor allows CORS too, so a participant holding its own key
+      // talks to tokenharbor.ai directly; keyless callers use the same-origin hop.
+      return resolveTokenHarborBaseUrl({
+        isApp: !!getClientConfig()?.isApp,
+        useCustomConfig: false,
+        customUrl: "",
+        hasOwnKey,
+      });
     default:
       return ApiPath.OpenAI;
   }
@@ -118,6 +132,8 @@ function providerChatPath(providerName: ServiceProvider): string {
       return ByteDance.ChatPath;
     case ServiceProvider.ChatGLM:
       return ChatGLM.ChatPath;
+    case ServiceProvider.TokenHarbor:
+      return TokenHarbor.ChatPath;
     default:
       return OpenaiPath.ChatPath;
   }
@@ -175,9 +191,7 @@ async function askParticipant(
   }
 
   return (
-    json?.choices?.at(0)?.message?.content ??
-    json?.choices?.at(0)?.text ??
-    ""
+    json?.choices?.at(0)?.message?.content ?? json?.choices?.at(0)?.text ?? ""
   );
 }
 
@@ -225,9 +239,7 @@ function buildMergePrompt(
   userRequest: string,
   answers: { model: string; content: string }[],
 ): RequestMessage[] {
-  const block = answers
-    .map((a) => `### ${a.model}\n${a.content}`)
-    .join("\n\n");
+  const block = answers.map((a) => `### ${a.model}\n${a.content}`).join("\n\n");
 
   return [
     {
@@ -337,7 +349,8 @@ export async function runCouncil(options: CouncilOptions) {
     const usable = drafts.filter((d) => d && d.length > 0);
     if (usable.length === 0) {
       const reason =
-        states.find((s) => s.error)?.error ?? "no participant returned an answer";
+        states.find((s) => s.error)?.error ??
+        "no participant returned an answer";
       throw new Error(reason);
     }
 
@@ -359,11 +372,15 @@ export async function runCouncil(options: CouncilOptions) {
       const answers = participants
         .map((p, i) => ({ model: p.model, content: drafts[i] ?? "" }))
         .filter((a) => a.content.length > 0);
-      merged = await askParticipant(chair, buildMergePrompt(userRequest, answers), {
-        temperature: options.temperature,
-        top_p: options.top_p,
-        signal: controller.signal,
-      });
+      merged = await askParticipant(
+        chair,
+        buildMergePrompt(userRequest, answers),
+        {
+          temperature: options.temperature,
+          top_p: options.top_p,
+          signal: controller.signal,
+        },
+      );
       states[chairIndex].status = "done";
       emit("merge", totalRounds + 1);
     }

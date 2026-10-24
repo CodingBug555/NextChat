@@ -20,6 +20,7 @@ import {
   AI302_BASE_URL,
   OPENROUTER_BASE_URL,
   NVIDIA_BASE_URL,
+  TOKENHARBOR_BASE_URL,
 } from "../constant";
 import { getHeaders } from "../client/api";
 import { getClientConfig } from "../config/client";
@@ -67,6 +68,10 @@ const DEFAULT_AI302_URL = isApp ? AI302_BASE_URL : ApiPath["302.AI"];
 const DEFAULT_OPENROUTER_URL = isApp ? OPENROUTER_BASE_URL : ApiPath.OpenRouter;
 
 const DEFAULT_NVIDIA_URL = isApp ? NVIDIA_BASE_URL : ApiPath.NVIDIA;
+
+const DEFAULT_TOKENHARBOR_URL = isApp
+  ? TOKENHARBOR_BASE_URL
+  : ApiPath.TokenHarbor;
 
 const DEFAULT_ACCESS_STATE = {
   accessCode: "",
@@ -152,6 +157,10 @@ const DEFAULT_ACCESS_STATE = {
   // nvidia
   nvidiaUrl: DEFAULT_NVIDIA_URL,
   nvidiaApiKey: "",
+
+  // token harbor
+  tokenHarborUrl: DEFAULT_TOKENHARBOR_URL,
+  tokenHarborApiKey: "",
 
   // server config
   needCode: true,
@@ -248,6 +257,10 @@ export const useAccessStore = createPersistStore(
       return ensure(get(), ["nvidiaApiKey"]);
     },
 
+    isValidTokenHarbor() {
+      return ensure(get(), ["tokenHarborApiKey"]);
+    },
+
     isAuthorized() {
       this.fetch();
 
@@ -269,6 +282,7 @@ export const useAccessStore = createPersistStore(
         this.isValidSiliconFlow() ||
         this.isValidOpenRouter() ||
         this.isValidNVIDIA() ||
+        this.isValidTokenHarbor() ||
         !this.enabledAccessControl() ||
         (this.enabledAccessControl() && ensure(get(), ["accessCode"]))
       );

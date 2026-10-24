@@ -503,6 +503,24 @@ const da: PartialLocaleType = {
           Fail: "Kunne ikke hente modeller, tjek din nøgle og adresse",
         },
       },
+      TokenHarbor: {
+        ApiKey: {
+          Title: "Token Harbor-nøgle",
+          SubTitle: "Din egen Token Harbor-nøgle",
+          Placeholder: "thk_xxx",
+        },
+        Endpoint: {
+          Title: "Adresse",
+          SubTitle: "F.eks.: ",
+        },
+        FetchModels: {
+          Title: "Modelliste",
+          SubTitle: "Hent modellisten fra Token Harbor",
+          Button: "Hent modeller",
+          Success: (count: number) => `Indlæste ${count} modeller`,
+          Fail: "Kunne ikke hente modeller, tjek din nøgle og adresse",
+        },
+      },
       Stability: {
         ApiKey: {
           Title: "Stability-nøgle",
@@ -708,9 +726,6 @@ const da: PartialLocaleType = {
   },
   Discovery: {
     Name: "Søgning og plugins",
-  },
-  Mcp: {
-    Name: "MCP",
   },
   FineTuned: {
     Sysmessage: "Du er en hjælper, der skal...",

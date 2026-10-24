@@ -19,5 +19,19 @@ const config: Config = {
   injectGlobals: true,
 };
 
-// createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-export default createJestConfig(config);
+// next/jest prepends its own "/node_modules/" entry to transformIgnorePatterns,
+// and Jest skips a file when *any* pattern matches — so appending a negated
+// pattern to `config` has no effect. Rewrite the resolved list instead, to let
+// SWC transform the ESM-only packages the app imports into CommonJS.
+const esmPackages = ["nanoid", "lodash-es"];
+
+export default async (
+  ...args: Parameters<ReturnType<typeof createJestConfig>>
+) => {
+  const resolved = await createJestConfig(config)(...args);
+  resolved.transformIgnorePatterns = [
+    `/node_modules/(?!(?:${esmPackages.join("|")})/)`,
+    "^.+\\.module\\.(css|sass|scss)$",
+  ];
+  return resolved;
+};

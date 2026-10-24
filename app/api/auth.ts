@@ -116,6 +116,9 @@ export function auth(
       case ModelProvider.NVIDIA:
         systemApiKey = serverConfig.nvidiaApiKey;
         break;
+      case ModelProvider.TokenHarbor:
+        systemApiKey = serverConfig.tokenHarborApiKey;
+        break;
       case ModelProvider.GPT:
       default:
         if (req.nextUrl.pathname.includes("azure/deployments")) {
@@ -129,7 +132,8 @@ export function auth(
       if (!options.silent) console.log("[Auth] use system api key");
       req.headers.set("Authorization", `Bearer ${systemApiKey}`);
     } else {
-      if (!options.silent) console.log("[Auth] admin did not provide an api key");
+      if (!options.silent)
+        console.log("[Auth] admin did not provide an api key");
     }
   } else {
     if (!options.silent) console.log("[Auth] use user api key");

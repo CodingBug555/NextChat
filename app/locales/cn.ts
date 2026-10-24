@@ -541,6 +541,24 @@ const cn = {
           Fail: "获取模型失败，请检查接口密钥和接口地址",
         },
       },
+      TokenHarbor: {
+        ApiKey: {
+          Title: "接口密钥",
+          SubTitle: "使用自定义 Token Harbor API Key",
+          Placeholder: "thk_xxx",
+        },
+        Endpoint: {
+          Title: "接口地址",
+          SubTitle: "样例：",
+        },
+        FetchModels: {
+          Title: "模型列表",
+          SubTitle: "从 Token Harbor 获取模型列表",
+          Button: "获取模型",
+          Success: (count: number) => `已加载 ${count} 个模型`,
+          Fail: "获取模型失败，请检查接口密钥和接口地址",
+        },
+      },
       Stability: {
         ApiKey: {
           Title: "接口密钥",
@@ -726,9 +744,6 @@ const cn = {
   },
   Discovery: {
     Name: "发现",
-  },
-  Mcp: {
-    Name: "MCP",
   },
   FineTuned: {
     Sysmessage: "你是一个助手",

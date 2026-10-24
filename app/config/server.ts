@@ -100,10 +100,12 @@ declare global {
       NVIDIA_URL?: string;
       NVIDIA_API_KEY?: string;
 
+      // token harbor only
+      TOKENHARBOR_URL?: string;
+      TOKENHARBOR_API_KEY?: string;
+
       // custom template for preprocessing user input
       DEFAULT_INPUT_TEMPLATE?: string;
-
-      ENABLE_MCP?: string; // enable mcp functionality
     }
   }
 }
@@ -178,6 +180,7 @@ export const getServerSideConfig = () => {
   const isAI302 = !!process.env.AI302_API_KEY;
   const isOpenRouter = !!process.env.OPENROUTER_API_KEY;
   const isNVIDIA = !!process.env.NVIDIA_API_KEY;
+  const isTokenHarbor = !!process.env.TOKENHARBOR_API_KEY;
   // const apiKeyEnvVar = process.env.OPENAI_API_KEY ?? "";
   // const apiKeys = apiKeyEnvVar.split(",").map((v) => v.trim());
   // const randomIndex = Math.floor(Math.random() * apiKeys.length);
@@ -273,6 +276,10 @@ export const getServerSideConfig = () => {
     nvidiaUrl: process.env.NVIDIA_URL,
     nvidiaApiKey: getApiKey(process.env.NVIDIA_API_KEY),
 
+    isTokenHarbor,
+    tokenHarborUrl: process.env.TOKENHARBOR_URL,
+    tokenHarborApiKey: getApiKey(process.env.TOKENHARBOR_API_KEY),
+
     gtmId: process.env.GTM_ID,
     gaId: process.env.GA_ID || DEFAULT_GA_ID,
 
@@ -291,6 +298,5 @@ export const getServerSideConfig = () => {
     defaultModel,
     visionModels,
     allowedWebDavEndpoints,
-    enableMcp: process.env.ENABLE_MCP === "true",
   };
 };

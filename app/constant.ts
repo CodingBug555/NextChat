@@ -42,6 +42,8 @@ export const OPENROUTER_BASE_URL = "https://openrouter.ai/api";
 
 export const NVIDIA_BASE_URL = "https://integrate.api.nvidia.com";
 
+export const TOKENHARBOR_BASE_URL = "https://tokenharbor.ai/v1";
+
 export const CACHE_URL_PREFIX = "/api/cache";
 export const UPLOAD_URL = `${CACHE_URL_PREFIX}/upload`;
 
@@ -57,7 +59,6 @@ export enum Path {
   SdNew = "/sd-new",
   Artifacts = "/artifacts",
   SearchChat = "/search-chat",
-  McpMarket = "/mcp-market",
 }
 
 export enum ApiPath {
@@ -81,6 +82,7 @@ export enum ApiPath {
   "302.AI" = "/api/302ai",
   OpenRouter = "/api/openrouter",
   NVIDIA = "/api/nvidia",
+  TokenHarbor = "/api/tokenharbor",
 }
 
 export enum SlotID {
@@ -103,7 +105,6 @@ export enum StoreKey {
   Update = "chat-update",
   Sync = "sync",
   SdList = "sd-list",
-  Mcp = "mcp-store",
 }
 
 export const DEFAULT_SIDEBAR_WIDTH = 300;
@@ -142,6 +143,7 @@ export enum ServiceProvider {
   "302.AI" = "302.AI",
   OpenRouter = "OpenRouter",
   NVIDIA = "NVIDIA",
+  TokenHarbor = "TokenHarbor",
 }
 
 // Google API safety settings, see https://ai.google.dev/gemini-api/docs/safety-settings
@@ -171,6 +173,7 @@ export enum ModelProvider {
   "302.AI" = "302.AI",
   OpenRouter = "OpenRouter",
   NVIDIA = "NVIDIA",
+  TokenHarbor = "TokenHarbor",
 }
 
 export const Stability = {
@@ -300,6 +303,12 @@ export const NVIDIA = {
   ListModelPath: "v1/models",
 };
 
+export const TokenHarbor = {
+  ExampleEndpoint: TOKENHARBOR_BASE_URL,
+  ChatPath: "chat/completions",
+  ListModelPath: "models",
+};
+
 export const DEFAULT_INPUT_TEMPLATE = `{{input}}`; // input / time / model / lang
 // export const DEFAULT_SYSTEM_TEMPLATE = `
 // You are a helpful AI assistant powered by a large language model from {{ServiceProvider}}.
@@ -316,130 +325,6 @@ Current model: {{model}}
 Current time: {{time}}
 Latex inline: \\(x^2\\) 
 Latex block: $$e=mc^2$$
-`;
-
-export const MCP_TOOLS_TEMPLATE = `
-[clientId]
-{{ clientId }}
-[tools]
-{{ tools }}
-`;
-
-export const MCP_SYSTEM_TEMPLATE = `
-You are an AI assistant with access to system tools. Your role is to help users by combining natural language understanding with tool operations when needed.
-
-1. AVAILABLE TOOLS:
-{{ MCP_TOOLS }}
-
-2. WHEN TO USE TOOLS:
-   - ALWAYS USE TOOLS when they can help answer user questions
-   - DO NOT just describe what you could do - TAKE ACTION immediately
-   - If you're not sure whether to use a tool, USE IT
-   - Common triggers for tool use:
-     * Questions about files or directories
-     * Requests to check, list, or manipulate system resources
-     * Any query that can be answered with available tools
-
-3. HOW TO USE TOOLS:
-   A. Tool Call Format:
-      - Use markdown code blocks with format: \`\`\`json:mcp:{clientId}\`\`\`
-      - Always include:
-        * method: "tools/call"（Only this method is supported）
-        * params: 
-          - name: must match an available primitive name
-          - arguments: required parameters for the primitive
-
-   B. Response Format:
-      - Tool responses will come as user messages
-      - Format: \`\`\`json:mcp-response:{clientId}\`\`\`
-      - Wait for response before making another tool call
-
-   C. Important Rules:
-      - Only use tools/call method
-      - Only ONE tool call per message
-      - ALWAYS TAKE ACTION instead of just describing what you could do
-      - Include the correct clientId in code block language tag
-      - Verify arguments match the primitive's requirements
-
-4. INTERACTION FLOW:
-   A. When user makes a request:
-      - IMMEDIATELY use appropriate tool if available
-      - DO NOT ask if user wants you to use the tool
-      - DO NOT just describe what you could do
-   B. After receiving tool response:
-      - Explain results clearly
-      - Take next appropriate action if needed
-   C. If tools fail:
-      - Explain the error
-      - Try alternative approach immediately
-
-5. EXAMPLE INTERACTION:
-
-  good example:
-
-   \`\`\`json:mcp:filesystem
-   {
-     "method": "tools/call",
-     "params": {
-       "name": "list_allowed_directories",
-       "arguments": {}
-     }
-   }
-   \`\`\`"
-
-
-  \`\`\`json:mcp-response:filesystem
-  {
-  "method": "tools/call",
-  "params": {
-    "name": "write_file",
-    "arguments": {
-      "path": "/Users/river/dev/nextchat/test/joke.txt",
-      "content": "为什么数学书总是感到忧伤？因为它有太多的问题。"
-    }
-  }
-  }
-\`\`\`
-
-   follwing is the wrong! mcp json example:
-
-   \`\`\`json:mcp:filesystem
-   {
-      "method": "write_file",
-      "params": {
-        "path": "NextChat_Information.txt",
-        "content": "1"
-    }
-   }
-   \`\`\`
-
-   This is wrong because the method is not tools/call.
-   
-   \`\`\`{
-  "method": "search_repositories",
-  "params": {
-    "query": "2oeee"
-  }
-}
-   \`\`\`
-
-   This is wrong because the method is not tools/call.!!!!!!!!!!!
-
-   the right format is:
-   \`\`\`json:mcp:filesystem
-   {
-     "method": "tools/call",
-     "params": {
-       "name": "search_repositories",
-       "arguments": {
-         "query": "2oeee"
-       }
-     }
-   }
-   \`\`\`
-   
-   please follow the format strictly ONLY use tools/call method!!!!!!!!!!!
-   
 `;
 
 export const SUMMARIZE_MODEL = "gpt-4o-mini";
@@ -515,7 +400,7 @@ export const VISION_MODEL_REGEXES = [
   /o3/,
   /o4-mini/,
   /grok-4/i,
-  /gpt-5/
+  /gpt-5/,
 ];
 
 export const EXCLUDE_VISION_MODEL_REGEXES = [/claude-3-5-haiku-20241022/];
@@ -583,7 +468,7 @@ const googleModels = [
   "gemini-2.0-pro-exp",
   "gemini-2.0-pro-exp-02-05",
   "gemini-2.5-pro-preview-06-05",
-  "gemini-2.5-pro"
+  "gemini-2.5-pro",
 ];
 
 const anthropicModels = [
@@ -811,6 +696,110 @@ const nvidiaModels = [
   "stepfun-ai/step-5-preview",
 ];
 
+// Slugs taken from https://tokenharbor.ai/sitemap.xml (the public catalogue).
+// `GET /v1/models` returns the same ids for a valid key; this list seeds the
+// picker so models are selectable before the first fetch.
+const tokenHarborModels = [
+  "claude-fable-5",
+  "claude-fable-5.1",
+  "claude-haiku-4.5",
+  "claude-haiku-5.5",
+  "claude-opus-4.7",
+  "claude-opus-4.8",
+  "claude-opus-5",
+  "claude-opus-5-fast",
+  "claude-opus-5.5",
+  "claude-opus-5.5-fast",
+  "claude-sonnet-4.6",
+  "claude-sonnet-5",
+  "claude-sonnet-5.5",
+  "deepseek-chat",
+  "deepseek-r1",
+  "deepseek-r1-0528",
+  "deepseek-v3.2",
+  "deepseek-v4-flash",
+  "deepseek-v4-pro",
+  "deepseek-v4.1-flash",
+  "deepseek-v4.1-flash-1017",
+  "deepseek-v4.1-flash-1017-fast",
+  "gemini-2.5-flash",
+  "gemini-2.5-pro",
+  "gemini-3.1-pro-preview",
+  "gemini-3.5-flash",
+  "gemini-3.6-flash",
+  "gemini-3.7-flash",
+  "gemini-3.8-flash",
+  "gemini-4-argon",
+  "glm-4.6",
+  "glm-4.7",
+  "glm-5",
+  "glm-5.1",
+  "glm-5.2",
+  "glm-5.3",
+  "glm-5.3-fast",
+  "glm-5.3-flash",
+  "glm-5.3-flashx",
+  "gpt-4o-mini",
+  "gpt-5-mini",
+  "gpt-5.4",
+  "gpt-5.5",
+  "gpt-5.6-luna",
+  "gpt-5.6-luna-fast",
+  "gpt-5.6-sol",
+  "gpt-5.6-sol-fast",
+  "gpt-5.6-terra",
+  "gpt-5.6-terra-fast",
+  "gpt-6-astra",
+  "gpt-6-astra-fast",
+  "gpt-6-luna",
+  "gpt-6-luna-fast",
+  "gpt-6-sol",
+  "gpt-6-sol-fast",
+  "gpt-6.1-sol",
+  "gpt-6.1-sol-fast",
+  "grok-4",
+  "grok-4-fast",
+  "grok-4.3",
+  "grok-4.5",
+  "grok-4.6",
+  "grok-4.7",
+  "kimi-k2-0905",
+  "kimi-k2-thinking",
+  "kimi-k2.5",
+  "kimi-k2.6",
+  "kimi-k3",
+  "kimi-k3-fast",
+  "kimi-k3.1-pro",
+  "ling-3.1-flash",
+  "llama-3.3-70b-instruct",
+  "llama-4-maverick",
+  "mimo-v2.5",
+  "mimo-v2.5-pro",
+  "mimo-v2.6-flash",
+  "mimo-v2.6-pro",
+  "minimax-m1",
+  "minimax-m2.5",
+  "minimax-m3.1-flash",
+  "mistral-large-2512",
+  "mistral-large-4",
+  "muse-spark-1-3",
+  "muse-spark-1.1",
+  "muse-spark-1.2",
+  "muse-wonder-1.0",
+  "o3",
+  "o4-mini",
+  "qwen3-235b-a22b-2507",
+  "qwen3-coder-flash",
+  "qwen3.5-27b",
+  "qwen3.6-27b",
+  "qwen3.6-flash",
+  "qwen3.7-flash",
+  "qwen3.7-max",
+  "qwen3.8-27b",
+  "qwen3.8-flash",
+  "qwen3.8-max",
+];
+
 let seq = 1000; // 内置的模型序号生成器从1000开始
 export const DEFAULT_MODELS = [
   ...openaiModels.map((name) => ({
@@ -998,6 +987,17 @@ export const DEFAULT_MODELS = [
       providerName: "NVIDIA",
       providerType: "nvidia",
       sorted: 17,
+    },
+  })),
+  ...tokenHarborModels.map((name) => ({
+    name,
+    available: true,
+    sorted: seq++,
+    provider: {
+      id: "tokenharbor",
+      providerName: "TokenHarbor",
+      providerType: "tokenharbor",
+      sorted: 18,
     },
   })),
 ] as const;
