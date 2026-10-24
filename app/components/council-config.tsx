@@ -1,9 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { nanoid } from "nanoid";
 
 import { ServiceProvider } from "@/app/constant";
 import { useAllModels } from "@/app/utils/hooks";
-import { CouncilConfig, CouncilParticipant, useAppConfig } from "@/app/store";
+import { CouncilConfig, CouncilParticipant } from "@/app/store";
 import { COUNCIL_PROVIDERS } from "@/app/utils/council";
 import Locale from "@/app/locales";
 import { ListItem, Select } from "./ui-lib";
@@ -13,12 +13,60 @@ import DeleteIcon from "../icons/delete.svg";
 import ResetIcon from "../icons/reload.svg";
 import styles from "./council-config.module.scss";
 
+/**
+ * Numeric field that keeps the raw text while the user is typing.
+ *
+ * Clamping on every keystroke makes the field impossible to edit: clearing it
+ * to retype a value collapses to the minimum, so the next digit lands on the
+ * end of that minimum ("1" + "2" -> 12). This keeps a local draft and only
+ * commits a parsed integer on change/blur.
+ */
+function RoundsInput(props: {
+  value: number;
+  onChange: (value: number) => void;
+  ariaLabel?: string;
+}) {
+  const [draft, setDraft] = useState(String(props.value));
+
+  useEffect(() => {
+    setDraft(String(props.value));
+  }, [props.value]);
+
+  const commit = (raw: string) => {
+    const parsed = Math.floor(Number(raw));
+    if (!Number.isFinite(parsed) || parsed < 1) {
+      props.onChange(1);
+      setDraft("1");
+    } else {
+      props.onChange(parsed);
+      setDraft(String(parsed));
+    }
+  };
+
+  return (
+    <input
+      type="number"
+      min={1}
+      aria-label={props.ariaLabel}
+      value={draft}
+      onChange={(e) => {
+        const raw = e.currentTarget.value;
+        setDraft(raw);
+        const parsed = Math.floor(Number(raw));
+        if (raw !== "" && Number.isFinite(parsed) && parsed >= 1) {
+          props.onChange(parsed);
+        }
+      }}
+      onBlur={(e) => commit(e.currentTarget.value)}
+    ></input>
+  );
+}
+
 export function CouncilConfigList(props: {
   councilConfig: CouncilConfig;
   updateConfig: (updater: (config: CouncilConfig) => void) => void;
 }) {
   const allModels = useAllModels();
-  const config = useAppConfig();
 
   const modelsByProvider = useMemo(() => {
     const map: Record<string, { name: string; displayName: string }[]> = {};
@@ -192,21 +240,13 @@ export function CouncilConfigList(props: {
             title={Locale.Settings.Council.Rounds.Title}
             subTitle={Locale.Settings.Council.Rounds.SubTitle}
           >
-            <input
-              type="number"
-              min={1}
-              max={5}
+            <RoundsInput
+              ariaLabel={Locale.Settings.Council.Rounds.Title}
               value={props.councilConfig.rounds}
-              onChange={(e) =>
-                update(
-                  (config) =>
-                    (config.rounds = Math.min(
-                      5,
-                      Math.max(1, Number(e.currentTarget.value) || 1),
-                    )),
-                )
+              onChange={(rounds) =>
+                update((config) => (config.rounds = rounds))
               }
-            ></input>
+            ></RoundsInput>
           </ListItem>
 
           <ListItem
